@@ -2,12 +2,13 @@ from bs4 import BeautifulSoup
 import requests
 import csv
 
-URL = "https://autoby.by/cars/lexus/"
+# URL = "https://autoby.by/cars/lexus/nx/"
 HEADERS = {'user-agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) '
                          'snap Chromium/80.0.3987.132 Chrome/80.0.3987.132 Safari/537.36', 'accept': '*/*'
 }
 HOST = 'https://autoby.by'
-FILE = '../telegram-bot-auto/cars.csv'
+FILE = '../telegram-bot-parsing_auto/cars.csv'
+
 
 def get_html(url, params = None):
     r = requests.get(url, headers = HEADERS, params=params)
@@ -24,7 +25,6 @@ def get_pages_count(html):
         return 1
 
 
-
 def get_content(html):
     soup = BeautifulSoup(html, 'html.parser')
     items = soup.find_all('div', class_ = 'info-wrapper visible-xs')
@@ -36,8 +36,9 @@ def get_content(html):
             'byn_price': item.find('div', class_='r-price col-xs-12').get_text().replace('\n', ""),
             'link': HOST +item.find('div', class_ = 'info').find_next('a').get('href')
         })
-
     return cars
+
+
 def save_file(items, path):
     with open(path, 'w', newline='') as file:
         writer = csv.writer(file, delimiter = ';')
@@ -46,7 +47,7 @@ def save_file(items, path):
             writer.writerow([item['title'], item['link'], item['usd_price'], item['byn_price']])
 
 
-def parse():
+def parse(URL):
     html = get_html(URL)
     if html.status_code == 200:
         cars = []
@@ -57,9 +58,9 @@ def parse():
             cars.extend(get_content(html.text))
         save_file(cars, FILE)
         return f'Getting {len(cars)} cars'
-
     else:
         return "Errors"
+
 
 if __name__ == '__main__':
     print(parse())
